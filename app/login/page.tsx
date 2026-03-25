@@ -37,7 +37,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace("/");
+      router.replace("/planning.html");
       router.refresh();
     } catch (err) {
       console.error(err);
