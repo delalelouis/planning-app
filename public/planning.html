@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planning paysage 2026</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(10, 15, 29, 0.92);
+      --line: #243041;
+      --soft: #94a3b8;
+      --text: #e5eef8;
+      --accent: #22c55e;
+      --accent-2: #16a34a;
+      --weekend: #172033;
+      --month: #1f2937;
+      --today: rgba(29,78,216,.12);
+      --danger: #ef4444;
+      --input: #0b1324;
+      --note: #f59e0b;
+      --month-sep: rgba(255,255,255,.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(34,197,94,.08), transparent 20%),
+        linear-gradient(180deg, #0a0f1d, #101827 35%, #0b1220 100%);
+      color: var(--text);
+    }
+    .app { padding: 18px; }
+    .hero {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: var(--panel);
+      border: 1px solid rgba(148,163,184,.12);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,.25);
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: .4px; }
+    .subtitle { margin-top: 6px; color: var(--soft); font-size: 14px; }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      align-items: center;
+    }
+    input, button, textarea {
+      border: 1px solid rgba(148,163,184,.18);
+      background: var(--input);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input {
+      min-width: 320px;
+      outline: none;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.45;
+    }
+    input:focus, textarea:focus {
+      border-color: rgba(34,197,94,.45);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+    }
+    button {
+      cursor: pointer;
+      transition: .18s ease;
+      font-weight: 700;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.18);
+    }
+    .btn-main {
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+    }
+    .badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .badge {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(148,163,184,.14);
+      color: var(--soft);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+    .table-wrap {
+      border: 1px solid rgba(148,163,184,.12);
+      border-radius: 18px;
+      overflow: auto;
+      background: rgba(7, 12, 22, 0.78);
+      box-shadow: 0 18px 38px rgba(0,0,0,.22);
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: max-content;
+      width: 100%;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .month-row th {
+      background: var(--month);
+      color: white;
+      font-size: 13px;
+      padding: 8px 0;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border-bottom: 1px solid var(--line);
+    }
+    .dow-row th, .date-row th {
+      background: #101a2b;
+      color: var(--soft);
+      font-size: 12px;
+      text-align: center;
+      min-width: 38px;
+      width: 38px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid rgba(255,255,255,.04);
+      padding: 7px 4px;
+    }
+    .date-row th {
+      color: #dbeafe;
+      font-weight: 700;
+      padding-bottom: 8px;
+    }
+    .left-head {
+      position: sticky !important;
+      left: 0;
+      z-index: 20 !important;
+      min-width: 360px !important;
+      max-width: 360px !important;
+      width: 360px !important;
+      text-align: left !important;
+      padding: 10px 14px !important;
+      background: #0f1727 !important;
+      border-right: 1px solid var(--line);
+    }
+    tbody td {
+      height: 42px;
+      min-width: 38px;
+      width: 38px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      background: rgba(255,255,255,.015);
+      position: relative;
+    }
+    tbody tr:hover td {
+      background: rgba(255,255,255,.03);
+    }
+    tbody td.client {
+      overflow: visible;
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      text-align: left;
+      min-width: 360px;
+      max-width: 360px;
+      width: 360px;
+      padding: 10px 14px;
+      font-weight: 600;
+      background: #0b1424;
+      border-right: 1px solid var(--line);
+      white-space: normal;
+    }
+    td.weekend, th.weekend {
+      background: var(--weekend) !important;
+    }
+    td.today, th.today {
+      box-shadow: inset 0 0 0 1px rgba(96,165,250,.5);
+      background: var(--today) !important;
+    }
+    .month-start {
+      border-left: 3px solid var(--month-sep) !important;
+      box-shadow: inset 2px 0 0 rgba(255,255,255,.08);
+    }
+    .cell-btn {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      position: relative;
+    }
+    .cell-btn::after {
+      content: "";
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      border-radius: 6px;
+      border: 1px solid rgba(148,163,184,.25);
+      background: rgba(255,255,255,.02);
+      vertical-align: middle;
+      transition: .15s ease;
+    }
+    .cell-btn.checked::after {
+      background: linear-gradient(180deg, #4ade80, #16a34a);
+      border-color: rgba(34,197,94,.8);
+      box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+    }
+    .has-comment::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--note);
+      box-shadow: 0 0 0 2px rgba(245,158,11,.18);
+      pointer-events: none;
+    }
+    .client-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .client-main {
+      min-width: 0;
+      flex: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 12px;
+      transition: .15s ease;
+    }
+    .client-main:hover {
+      background: rgba(255,255,255,.04);
+    }
+    .client-main.has-client-comment .client-name::after {
+      content: " •";
+      color: #fbbf24;
+      font-weight: 800;
+    }
+    .mini {
+      font-size: 12px;
+      color: var(--soft);
+      margin-top: 4px;
+      white-space: normal;
+      line-height: 1.35;
+    }
+    .client-actions {
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .client-menu-btn {
+      min-width: auto;
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1;
+      background: rgba(255,255,255,.04);
+    }
+    .client-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      min-width: 220px;
+      background: #0f172a;
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 14px;
+      box-shadow: 0 18px 34px rgba(0,0,0,.35);
+      padding: 6px;
+      display: none;
+      z-index: 60;
+    }
+    .client-menu.show {
+      display: block;
+    }
+    tr.menu-open td,
+    tr.menu-open td.client {
+      position: relative;
+      z-index: 200 !important;
+    }
+    tr.menu-open td.client {
+      z-index: 300 !important;
+    }
+    .client-menu button {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transform: none !important;
+    }
+    .client-menu button:hover {
+      background: rgba(255,255,255,.05);
+    }
+    .client-menu .danger-item {
+      color: #fca5a5;
+    }
+    .footer-note {
+      color: var(--soft);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,.62);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 18px;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal {
+      width: min(760px, 100%);
+      background: linear-gradient(180deg, rgba(15,23,42,.98), rgba(11,18,32,.98));
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: 20px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.4);
+      padding: 18px;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .modal-sub {
+      color: var(--soft);
+      font-size: 13px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .hint {
+      color: var(--soft);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px) {
+      .left-head, tbody td.client {
+        min-width: 280px !important;
+        max-width: 280px !important;
+        width: 280px !important;
+      }
+      input {
+        min-width: 220px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/tarification.html" style="
+  background:#10b981;
+  padding:10px 20px;
+  border-radius:10px;
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+">
+  💰 Ouvrir le calculateur
+</a>
+  <div class="app">
+    <div class="hero">
+      <h1>Planning saison paysage 2026</h1>
+      <div class="subtitle">Même logique que ton Excel, avec commentaires sur les cases et sur les clients.</div>
+
+      <div class="controls">
+        <input id="clientInput" type="text" placeholder="Ajouter un nouveau client…" />
+        <button class="btn-main" id="addClientBtn">+ Ajouter client</button>
+        <button id="exportBtn">Exporter .json</button>
+        <button id="importBtn">Importer .json</button>
+        <input id="importFile" type="file" accept=".json" style="display:none" />
+      </div>
+
+      <div class="badges">
+        <div class="badge">1 clic sur une case vide = coche + commentaire du passage</div>
+        <div class="badge">Double-clic sur une case cochée = modifier le commentaire du passage</div>
+        <div class="badge">Point orange = commentaire enregistré</div>
+        <div class="badge">Nom client = commentaire client</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="planningTable"></table>
+    </div>
+
+    <div class="footer-note">J’ai remis les données et commentaires de ton fichier Excel de base.</div>
+  </div>
+
+  <div class="modal-backdrop" id="commentModal">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">Commentaire du passage</div>
+      <div class="modal-sub" id="modalSub"></div>
+      <textarea id="commentTextarea" placeholder="Ex : T/R/E&#10;Nettoyage terrasse&#10;Taille des végétaux"></textarea>
+      <div class="hint">Ce commentaire est lié à une date précise.</div>
+      <div class="modal-actions">
+        <button id="deleteCommentBtn">Supprimer le commentaire</button>
+        <button id="cancelCommentBtn">Annuler</button>
+        <button id="saveCommentBtn" class="btn-main">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="clientCommentModal">
+    <div class="modal">
+      <div class="modal-title" id="clientModalTitle">Commentaire client</div>
+      <div class="modal-sub" id="clientModalSub"></div>
+      <textarea id="clientCommentTextarea" placeholder="Ex : accès compliqué, appeler avant de passer, attention chien, portail à refermer..."></textarea>
+      <div class="hint">Ce commentaire est lié au client.</div>
+      <div class="modal-actions">
+        <button id="deleteClientCommentBtn">Supprimer le commentaire client</button>
+        <button id="cancelClientCommentBtn">Annuler</button>
+        <button id="saveClientCommentBtn" class="btn-main">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "planning-paysage-2026-stable-v1";
+    const seedClients = [{"name": "Pieter Pelt - Saint-Jean-d'Aulps", "checks": ["2026-04-10", "2026-05-11", "2026-06-11", "2026-07-13", "2026-08-12", "2026-09-18", "2026-10-15"], "comments": {"2026-04-10": "T/R/E", "2026-05-11": "T/R/E", "2026-06-11": "T/R/E\nNettoyage terasse\nDébrousaillage champ sous coto", "2026-07-13": "T/R/E", "2026-08-12": "T/R/E", "2026-09-18": "T/R/E\nDébrousaillage champ sous Coto", "2026-10-15": "T/R/E\nNettoyage terrasse karcher"}, "clientComment": "LOUIS:\nAller voir quand réaliser la taille pour les arbres fruitiés et les arbustres"}, {"name": "Raphael Maspoli - Le Biot", "checks": ["2026-04-15", "2026-05-27", "2026-07-08", "2026-08-19", "2026-09-30"], "comments": {"2026-04-15": "T/R/E", "2026-05-27": "T/R/E", "2026-07-08": "T/R/E", "2026-08-19": "T/R/E", "2026-09-30": "T/R/E\nTaille des millepertuis"}, "clientComment": ""}, {"name": "Pierre Ottin - Saint Jean d'Aulps", "checks": ["2026-05-05", "2026-06-02", "2026-06-23", "2026-07-15", "2026-08-04", "2026-09-01"], "comments": {"2026-05-05": "T/R/E\nTaille des végétaux", "2026-06-02": "T/R/E", "2026-06-23": "T/R/E", "2026-07-15": "T/R/E", "2026-08-04": "T/R/E", "2026-09-01": "T/R/E"}, "clientComment": ""}, {"name": "Copropriété de la Ferme Requet - Le Biot", "checks": ["2026-03-09"], "comments": {"2026-03-09": "Tailles des groseillers et cassissiers"}, "clientComment": ""}, {"name": "Aurélie Raoult - Morzine", "checks": [], "comments": {}, "clientComment": ""}, {"name": "Guillaume Raoult - Evian", "checks": [], "comments": {}, "clientComment": ""}, {"name": "Guillaume Raoult - Thonon", "checks": [], "comments": {}, "clientComment": ""}, {"name": "Guillaume Raoult - Anthy-sur-Léman", "checks": [], "comments": {}, "clientComment": ""}, {"name": "Marion Vauthay - Seytroux", "checks": ["2026-04-27", "2026-06-01", "2026-07-16", "2026-09-02", "2026-10-02"], "comments": {"2026-04-27": "D/R/E", "2026-06-01": "D/R/E", "2026-07-16": "D/R/E", "2026-09-02": "D/R/E", "2026-10-02": "D/R/E"}, "clientComment": ""}];
+    const dates = ["2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-07", "2026-03-08", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-14", "2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-10", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-16", "2026-05-17", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-18", "2026-07-19", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-25", "2026-07-26", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07", "2026-08-08", "2026-08-09", "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13", "2026-08-14", "2026-08-15", "2026-08-16", "2026-08-17", "2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23", "2026-08-24", "2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-08-29", "2026-08-30", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02", "2026-11-03", "2026-11-04"];
+    const today = new Date().toISOString().slice(0, 10);
+
+    const monthNames = {
+      "01": "Janvier", "02": "Février", "03": "Mars", "04": "Avril", "05": "Mai", "06": "Juin",
+      "07": "Juillet", "08": "Août", "09": "Septembre", "10": "Octobre", "11": "Novembre", "12": "Décembre"
+    };
+    const dowShort = ["Di","Lu","Ma","Me","Je","Ve","Sa"];
+
+    let clients = loadData();
+    let currentEdit = null;
+    let currentClientEdit = null;
+
+    function cloneSeed() {
+      return JSON.parse(JSON.stringify(seedClients));
+    }
+
+    function normalizeClients(data) {
+      return data.map(item => ({
+        name: String(item.name || "").trim(),
+        checks: Array.isArray(item.checks) ? [...new Set(item.checks)].sort() : [],
+        comments: item.comments && typeof item.comments === "object" ? item.comments : {},
+        clientComment: String(item.clientComment || "")
+      })).filter(item => item.name);
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return cloneSeed();
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.length === 0) return cloneSeed();
+        return normalizeClients(parsed);
+      } catch {
+        return cloneSeed();
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function buildMonthGroups() {
+      const groups = [];
+      let current = null;
+      dates.forEach((iso) => {
+        const month = iso.slice(5, 7);
+        const year = iso.slice(0, 4);
+        const label = `${monthNames[month]} ${year}`;
+        if (!current || current.label !== label) {
+          current = { label, days: [] };
+          groups.push(current);
+        }
+        current.days.push(iso);
+      });
+      return groups;
+    }
+
+    function isMonthStart(iso) {
+      return iso.slice(8, 10) === "01";
+    }
+
+    function isoToParts(iso) {
+      const d = new Date(iso + "T12:00:00");
+      return {
+        day: d.getDate(),
+        dow: dowShort[d.getDay()],
+        weekend: d.getDay() === 0 || d.getDay() === 6
+      };
+    }
+
+    function formatDisplayDate(iso) {
+      const d = new Date(iso + "T12:00:00");
+      return d.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+    function toggleCheck(clientIndex, iso) {
+      const client = clients[clientIndex];
+      const checks = new Set(client.checks || []);
+      const alreadyChecked = checks.has(iso);
+
+      if (alreadyChecked) {
+        checks.delete(iso);
+        if (client.comments && client.comments[iso]) delete client.comments[iso];
+        client.checks = Array.from(checks).sort();
+        saveData();
+        render();
+        return;
+      }
+
+      checks.add(iso);
+      client.checks = Array.from(checks).sort();
+      saveData();
+      render();
+      openPassageCommentModal(clientIndex, iso);
+    }
+
+    function openPassageCommentModal(clientIndex, iso) {
+      currentEdit = { clientIndex, iso };
+      const client = clients[clientIndex];
+      const existing = client.comments?.[iso] || "";
+      document.getElementById("modalTitle").textContent = "Commentaire du passage";
+      document.getElementById("modalSub").innerHTML =
+        `<strong>${escapeHtml(client.name)}</strong><br>${escapeHtml(formatDisplayDate(iso))}`;
+      document.getElementById("commentTextarea").value = existing;
+      document.getElementById("deleteCommentBtn").style.display = existing ? "inline-block" : "none";
+      document.getElementById("commentModal").classList.add("show");
+      setTimeout(() => document.getElementById("commentTextarea").focus(), 20);
+    }
+
+    function closePassageCommentModal() {
+      currentEdit = null;
+      document.getElementById("commentModal").classList.remove("show");
+    }
+
+    function savePassageComment() {
+      if (!currentEdit) return;
+      const { clientIndex, iso } = currentEdit;
+      const value = document.getElementById("commentTextarea").value.trim();
+      if (!clients[clientIndex].comments) clients[clientIndex].comments = {};
+      if (value) clients[clientIndex].comments[iso] = value;
+      else delete clients[clientIndex].comments[iso];
+      saveData();
+      render();
+      closePassageCommentModal();
+    }
+
+    function deletePassageCommentOnly() {
+      if (!currentEdit) return;
+      const { clientIndex, iso } = currentEdit;
+      if (clients[clientIndex].comments) delete clients[clientIndex].comments[iso];
+      saveData();
+      render();
+      closePassageCommentModal();
+    }
+
+    function editCheckedCell(clientIndex, iso) {
+      const client = clients[clientIndex];
+      if (!client.checks.includes(iso)) return;
+      openPassageCommentModal(clientIndex, iso);
+    }
+
+    function openClientCommentModal(clientIndex) {
+      currentClientEdit = clientIndex;
+      const client = clients[clientIndex];
+      const existing = client.clientComment || "";
+      document.getElementById("clientModalTitle").textContent = "Commentaire client";
+      document.getElementById("clientModalSub").innerHTML = `<strong>${escapeHtml(client.name)}</strong>`;
+      document.getElementById("clientCommentTextarea").value = existing;
+      document.getElementById("deleteClientCommentBtn").style.display = existing ? "inline-block" : "none";
+      document.getElementById("clientCommentModal").classList.add("show");
+      setTimeout(() => document.getElementById("clientCommentTextarea").focus(), 20);
+    }
+
+    function closeClientCommentModal() {
+      currentClientEdit = null;
+      document.getElementById("clientCommentModal").classList.remove("show");
+    }
+
+    function saveClientComment() {
+      if (currentClientEdit === null) return;
+      clients[currentClientEdit].clientComment = document.getElementById("clientCommentTextarea").value.trim();
+      saveData();
+      render();
+      closeClientCommentModal();
+    }
+
+    function deleteClientCommentOnly() {
+      if (currentClientEdit === null) return;
+      clients[currentClientEdit].clientComment = "";
+      saveData();
+      render();
+      closeClientCommentModal();
+    }
+
+    function renameClient(index) {
+      const newName = prompt("Nouveau nom du client :", clients[index].name);
+      if (!newName) return;
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      clients[index].name = trimmed;
+      saveData();
+      render();
+    }
+
+    function openAddClientComment(index) {
+      openClientCommentModal(index);
+      closeClientMenus();
+    }
+
+    function openEditClientComment(index) {
+      openClientCommentModal(index);
+      closeClientMenus();
+    }
+
+    function deleteClient(index) {
+      const ok = confirm(`Supprimer "${clients[index].name}" ?`);
+      if (!ok) return;
+      clients.splice(index, 1);
+      saveData();
+      render();
+    }
+
+    function toggleClientMenu(index, event) {
+      event.stopPropagation();
+      const currentMenu = document.getElementById(`client-menu-${index}`);
+      const currentRow = document.getElementById(`client-row-${index}`);
+      const wasOpen = currentMenu && currentMenu.classList.contains("show");
+
+      closeClientMenus();
+
+      if (!currentMenu || !currentRow || wasOpen) return;
+
+      currentMenu.classList.add("show");
+      currentRow.classList.add("menu-open");
+    }
+
+    function closeClientMenus() {
+      document.querySelectorAll(".client-menu.show").forEach(menu => menu.classList.remove("show"));
+      document.querySelectorAll("tr.menu-open").forEach(row => row.classList.remove("menu-open"));
+    }
+
+    function addClient() {
+      const input = document.getElementById("clientInput");
+      const name = input.value.trim();
+      if (!name) return;
+      clients.push({ name, checks: [], comments: {}, clientComment: "" });
+      input.value = "";
+      saveData();
+      render();
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(clients, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "planning-paysage-2026.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!Array.isArray(data)) throw new Error("Format invalide");
+          clients = normalizeClients(data);
+          if (clients.length === 0) clients = cloneSeed();
+          saveData();
+          render();
+        } catch {
+          alert("Fichier JSON invalide.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function render() {
+      const table = document.getElementById("planningTable");
+      const groups = buildMonthGroups();
+      let html = "";
+
+      html += `<thead>`;
+      html += `<tr class="month-row"><th class="left-head">Date</th>`;
+      groups.forEach(group => {
+        html += `<th colspan="${group.days.length}">${group.label}</th>`;
+      });
+      html += `</tr>`;
+
+      html += `<tr class="dow-row"><th class="left-head">Jours</th>`;
+      dates.forEach(iso => {
+        const p = isoToParts(iso);
+        const cls = [p.weekend ? "weekend" : "", iso === today ? "today" : "", isMonthStart(iso) ? "month-start" : ""].join(" ");
+        html += `<th class="${cls}">${p.dow}</th>`;
+      });
+      html += `</tr>`;
+
+      html += `<tr class="date-row"><th class="left-head">Noms clients</th>`;
+      dates.forEach(iso => {
+        const p = isoToParts(iso);
+        const cls = [p.weekend ? "weekend" : "", iso === today ? "today" : "", isMonthStart(iso) ? "month-start" : ""].join(" ");
+        html += `<th class="${cls}">${p.day}</th>`;
+      });
+      html += `</tr>`;
+      html += `</thead>`;
+
+      html += `<tbody>`;
+      clients.forEach((client, rowIndex) => {
+        const checks = new Set(client.checks || []);
+        const comments = client.comments || {};
+        const commentsCount = Object.keys(comments).length;
+
+        html += `<tr id="client-row-${rowIndex}">`;
+        html += `
+          <td class="client" title="${escapeHtml(client.clientComment || "")}">
+            <div class="client-line">
+              <div class="client-main ${client.clientComment ? "has-client-comment" : ""}" onclick="openClientCommentModal(${rowIndex})">
+                <div class="client-name">${escapeHtml(client.name)}</div>
+                <div class="mini">
+                  ${checks.size} passage${checks.size > 1 ? "s" : ""} planifié${checks.size > 1 ? "s" : ""}
+                  • ${commentsCount} commentaire${commentsCount > 1 ? "s" : ""}
+                  • ${client.clientComment ? "commentaire client présent" : "cliquer pour ajouter un commentaire client"}
+                </div>
+              </div>
+              <div class="client-actions">
+                <button class="client-menu-btn" onclick="toggleClientMenu(${rowIndex}, event)">⋯</button>
+                <div class="client-menu" id="client-menu-${rowIndex}" data-index="${rowIndex}">
+                  <button onclick="closeClientMenus(); renameClient(${rowIndex});">Modifier le client</button>
+                  <button onclick="closeClientMenus(); openAddClientComment(${rowIndex});">Ajouter un commentaire</button>
+                  <button onclick="closeClientMenus(); openEditClientComment(${rowIndex});">Modifier un commentaire</button>
+                  <button class="danger-item" onclick="closeClientMenus(); deleteClient(${rowIndex});">Supprimer le client</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        `;
+
+        dates.forEach(iso => {
+          const p = isoToParts(iso);
+          const cls = [
+            p.weekend ? "weekend" : "",
+            iso === today ? "today" : "",
+            isMonthStart(iso) ? "month-start" : ""
+          ].join(" ");
+          const checked = checks.has(iso) ? "checked" : "";
+          const note = comments[iso] ? "has-comment" : "";
+          const title = comments[iso] ? escapeHtml(comments[iso]) : "";
+          html += `
+            <td class="${cls}">
+              <button
+                class="cell-btn ${checked} ${note}"
+                onclick="toggleCheck(${rowIndex}, '${iso}')"
+                ondblclick="editCheckedCell(${rowIndex}, '${iso}')"
+                title="${title}"
+              ></button>
+            </td>
+          `;
+        });
+
+        html += `</tr>`;
+      });
+      html += `</tbody>`;
+
+      table.innerHTML = html;
+    }
+
+    document.getElementById("addClientBtn").addEventListener("click", addClient);
+    document.getElementById("clientInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addClient();
+    });
+    document.getElementById("exportBtn").addEventListener("click", exportJson);
+    document.getElementById("importBtn").addEventListener("click", () => {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) importJson(file);
+      e.target.value = "";
+    });
+
+    document.getElementById("saveCommentBtn").addEventListener("click", savePassageComment);
+    document.getElementById("cancelCommentBtn").addEventListener("click", closePassageCommentModal);
+    document.getElementById("deleteCommentBtn").addEventListener("click", deletePassageCommentOnly);
+    document.getElementById("commentModal").addEventListener("click", (e) => {
+      if (e.target.id === "commentModal") closePassageCommentModal();
+    });
+    document.getElementById("commentTextarea").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") savePassageComment();
+      if (e.key === "Escape") closePassageCommentModal();
+    });
+
+    document.getElementById("saveClientCommentBtn").addEventListener("click", saveClientComment);
+    document.getElementById("cancelClientCommentBtn").addEventListener("click", closeClientCommentModal);
+    document.getElementById("deleteClientCommentBtn").addEventListener("click", deleteClientCommentOnly);
+    document.getElementById("clientCommentModal").addEventListener("click", (e) => {
+      if (e.target.id === "clientCommentModal") closeClientCommentModal();
+    });
+    document.getElementById("clientCommentTextarea").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") saveClientComment();
+      if (e.key === "Escape") closeClientCommentModal();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".client-actions")) closeClientMenus();
+    });
+
+    window.toggleCheck = toggleCheck;
+    window.editCheckedCell = editCheckedCell;
+    window.openClientCommentModal = openClientCommentModal;
+    window.renameClient = renameClient;
+    window.openAddClientComment = openAddClientComment;
+    window.openEditClientComment = openEditClientComment;
+    window.deleteClient = deleteClient;
+    window.toggleClientMenu = toggleClientMenu;
+    window.closeClientMenus = closeClientMenus;
+
+    render();
+  </script>
+</body>
+</html>

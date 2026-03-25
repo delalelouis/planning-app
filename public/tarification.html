@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delale Paysage — Outil de tarification</title>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --line:#dbe3ee;
+      --text:#0f172a;
+      --muted:#64748b;
+      --blue:#1f4d7a;
+      --green:#e8f4e8;
+      --soft:#f8fafc;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:linear-gradient(135deg,#f8fafc,#ffffff 45%,#edf7ef);
+    }
+    .wrap{max-width:1400px;margin:0 auto;padding:22px}
+    .hero{
+      display:grid;grid-template-columns:1.4fr .9fr;gap:24px;margin-bottom:24px
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+    }
+    .card.pad{padding:28px}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      background:#dff3e4;color:#166534;border-radius:999px;
+      padding:10px 14px;font-size:14px;font-weight:700
+    }
+    h1{margin:18px 0 6px;font-size:46px;line-height:1.05}
+    h2,h3,h4{margin:0}
+    .top-right{background:var(--blue);color:#fff}
+    .top-right .item{display:flex;align-items:center;gap:10px;margin:16px 0;color:#e2e8f0}
+    .tabs{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px
+    }
+    .tab-btn{
+      border:1px solid var(--line);background:#fff;color:var(--text);
+      border-radius:24px;padding:16px;text-align:left;cursor:pointer;
+      box-shadow:0 4px 12px rgba(15,23,42,.05);min-height:88px
+    }
+    .tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .tab-btn small{display:block;color:var(--muted);margin-top:4px}
+    .tab-btn.active small{color:#dbeafe}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .calc .head{
+      background:var(--blue);color:#fff;border-radius:30px 30px 0 0;padding:22px 24px;
+      display:flex;align-items:center;justify-content:space-between;gap:16px
+    }
+    .calc .body{padding:24px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+    .inner{
+      background:var(--soft);border:1px solid var(--line);border-radius:28px
+    }
+    .inner .inner-head{padding:20px 20px 0;font-size:22px;font-weight:700}
+    .inner .inner-body{padding:20px}
+    .field{
+      display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;margin-bottom:14px
+    }
+    .field label{font-size:14px;font-weight:700;color:#334155}
+    input,select,button,textarea{
+      font:inherit
+    }
+    input,select{
+      width:100%;height:46px;padding:10px 12px;border-radius:14px;border:1px solid #cbd5e1;
+      background:var(--green)
+    }
+    .result-row{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;margin-bottom:10px
+    }
+    .result-row .l{font-size:14px;color:#475569}
+    .result-row .v{font-size:14px;font-weight:700}
+    .result-row.strong .l,.result-row.strong .v{font-size:16px;color:#0f172a}
+    .sep{height:1px;background:var(--line);margin:12px 0}
+    .btn{
+      border:0;background:#fff;color:var(--text);padding:11px 16px;border-radius:16px;cursor:pointer;font-weight:700
+    }
+    .btn.primary{background:var(--blue);color:#fff}
+    .btn.ghost{background:#fff}
+    .btn.dark{background:#0f172a;color:#fff}
+    .section-title{
+      margin-bottom:14px;padding:18px 22px;background:#fff;border:1px solid var(--line);
+      border-radius:24px;font-size:24px;font-weight:800
+    }
+    .param-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:20px}
+    .param-col .card{padding:18px}
+    .param-right .big{padding:18px}
+    .param-groups{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .group-card{
+      border:1px solid var(--line);border-radius:24px;background:#fff;padding:16px
+    }
+    .group-card h4{margin-bottom:12px}
+    .quick-line,.edit-line{
+      display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+      border:1px solid var(--line);border-radius:16px;background:#f8fafc;padding:12px;margin-bottom:10px
+    }
+    .edit-line{grid-template-columns:1fr 110px}
+    .rate-row{
+      border:1px solid var(--line);border-radius:18px;background:#f8fafc;padding:12px;margin-bottom:10px
+    }
+    .rate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .rate-grid.two{grid-template-columns:repeat(2,1fr)}
+    .small-label{font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px}
+    .badge-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    .badge{
+      background:var(--blue);color:#fff;border-radius:14px;padding:10px 14px;font-size:14px;font-weight:700
+    }
+    .hidden{display:none!important}
+    @media (max-width:1100px){
+      .hero,.grid-2,.param-grid,.param-groups{grid-template-columns:1fr}
+      .tabs{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:700px){
+      h1{font-size:32px}
+      .field{grid-template-columns:1fr}
+      .tabs{grid-template-columns:1fr}
+      .rate-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<a href="/planning.html" style="
+  background:#3b82f6;
+  padding:10px 20px;
+  border-radius:10px;
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+">
+  📅 Retour planning
+</a>  
+<div class="wrap">
+  <section class="hero">
+    <div class="card pad">
+      <div class="pill">🌿 Delale Paysage — Outil de tarification</div>
+      <h1>Site de calcul pour tes devis paysagiste</h1>
+      <div class="badge-list">
+        <span class="badge">Tonte</span>
+        <span class="badge">Débroussaillage</span>
+        <span class="badge">Désherbage</span>
+        <span class="badge">Haies</span>
+      </div>
+    </div>
+    <div class="card pad top-right">
+      <h2>Organisation du site</h2>
+      <div class="item">🧮 4 calculateurs</div>
+      <div class="item">⚙️ paramètres</div>
+      <div class="item">🚚 évacuation et déplacement</div>
+    </div>
+  </section>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="content-tonte" class="tab-content active"></div>
+  <div id="content-debroussaillage" class="tab-content"></div>
+  <div id="content-desherbage" class="tab-content"></div>
+  <div id="content-haies" class="tab-content"></div>
+  <div id="content-parametres" class="tab-content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = "delale-paysage-tarification-v2026";
+
+const defaults = {
+  tonteSurfaceRates: [
+    { min: 0, rate: 0.75, label: "micro-surface" },
+    { min: 101, rate: 0.55, label: "petite surface" },
+    { min: 251, rate: 0.27, label: "surface standard" },
+    { min: 501, rate: 0.19, label: "surface moyenne" },
+    { min: 1001, rate: 0.15, label: "grande surface" },
+    { min: 2001, rate: 0.14, label: "très grande surface" },
+  ],
+  debroussaillageSurfaceRates: [
+    { min: 0, rate: 0.6, label: "micro-surface" },
+    { min: 151, rate: 0.42, label: "petite surface" },
+    { min: 401, rate: 0.28, label: "surface standard" },
+    { min: 1001, rate: 0.22, label: "grande surface" },
+    { min: 2501, rate: 0.18, label: "très grande surface" },
+  ],
+  desherbageSurfaceRates: [
+    { min: 0, rate: 2.2, label: "micro-surface" },
+    { min: 51, rate: 1.55, label: "petite surface" },
+    { min: 101, rate: 1.05, label: "surface standard" },
+    { min: 201, rate: 0.82, label: "surface moyenne" },
+    { min: 501, rate: 0.62, label: "grande surface" },
+  ],
+  haieBaseRates: [
+    { minHeight: 0, rate: 4, label: "< 1 m" },
+    { minHeight: 1, rate: 6, label: "1 à 1,5 m" },
+    { minHeight: 1.5, rate: 8, label: "1,5 à 2 m" },
+    { minHeight: 2, rate: 11, label: "2 à 2,5 m" },
+    { minHeight: 2.5, rate: 14, label: "2,5 à 3 m" },
+    { minHeight: 3, rate: 18, label: "> 3 m" },
+  ],
+  tonteParams: {
+    terrain: { "Plat et dégagé": 1, "Pente douce": 1.08, "Talus / replat / pente": 1.15, "Terrain difficile": 1.25, "Très difficile": 1.38 },
+    herbe: { Basse: 0.95, Normale: 1, Moyenne: 1.05, Haute: 1.12, "Remise en état": 1.25 },
+    zones: { "1 zone": 1, "2 à 3 zones": 1.04, "4 zones et +": 1.08 },
+    obstacles: { Faible: 1, Moyen: 1.04, "Élevé": 1.1, "Très élevé": 1.18 },
+    acces: { Facile: 1, Moyen: 1.03, Difficile: 1.08 },
+    bordures: { Non: 1, Oui: 1.05 },
+    frequence: { "Ponctuel / hors contrat": 1, Saisonnier: 0.98, Régulier: 0.95 },
+    remise: { Non: 1, Oui: 1.15 },
+    constantes: { tauxEvac: 40, minimum: 80, deplacement: 0 },
+  },
+  debroussaillageParams: {
+    terrain: { "Plat et dégagé": 1, "Pente douce": 1.08, "Talus / pente": 1.18, "Terrain difficile": 1.3, "Accès pénible / terrain sale": 1.45 },
+    vegetation: { "Entretien léger": 0.9, Normale: 1, "Dense / herbe haute": 1.15, "Très dense / remise en état": 1.3, "Ronces légères / rejets": 1.45 },
+    zones: { "1 zone simple": 1, "2 à 3 zones": 1.08, "4 zones et +": 1.16 },
+    acces: { Facile: 1, Moyen: 1.05, Difficile: 1.12 },
+    finition: { "Sans finition": 1, "Avec soufflage / finition": 1.08, "Coupe soignée / contours": 1.12 },
+    frequence: { "Entretien régulier": 0.95, "2 passages / an": 1, Ponctuel: 1.08, "Remise en état": 1.2 },
+    evacuation: { Non: 1, Oui: 1 },
+    constantes: { tauxEvac: 40, minimum: 90, deplacement: 0 },
+  },
+  desherbageParams: {
+    support: { "Tout-venant / stabilisé": 1, "Enrobé / béton": 1, "Pavés / joints": 1.12, "Graviers / zone meuble": 1.08, "Caniveaux / bordures / zone mixte": 1.15 },
+    densite: { "Légère": 0.9, Normale: 1, Dense: 1.15, "Très dense / remise en état": 1.3 },
+    acces: { Facile: 1, Moyen: 1.05, Difficile: 1.12 },
+    finition: { "Sans soufflage": 1, "Avec soufflage": 1.08, "Finition soignée": 1.12 },
+    frequence: { "Entretien régulier": 0.9, "2 à 3 passages / an": 0.95, Ponctuel: 1, "Remise en état": 1.15 },
+    options: { "Sans anti-repousse": 0, "Avec anti-repousse": 0.2 },
+    constantes: { minimum: 75, forfaitThermiqueMini: 45, deplacement: 0 },
+  },
+  haieParams: {
+    configuration: { "1 face seule": 0.65, "2 faces": 0.9, "2 faces + dessus": 1, "Réduction légère": 1.15, "Réduction importante": 1.35 },
+    densite: { "Légère / entretien": 0.92, Normale: 1, Dense: 1.1, "Très dense / difficile": 1.22, "Bois dur / mixte / vieux": 1.3 },
+    largeur: { "Fine (< 0,60 m)": 0.95, Standard: 1, Large: 1.1, "Très large": 1.2 },
+    acces: { Facile: 1, Moyen: 1.05, Difficile: 1.12 },
+    frequence: { "Entretien régulier": 0.95, Ponctuel: 1, "Remise en état": 1.15 },
+    evacuation: { Non: 1, Oui: 1 },
+    constantes: { tauxEvac: 40, minimum: 95, deplacement: 0 },
+  },
+  forms: {
+    tonte: { surface: 0, terrain: "Plat et dégagé", herbe: "Normale", zones: "1 zone", obstacles: "Faible", acces: "Facile", bordures: "Non", frequence: "Ponctuel / hors contrat", remise: "Non", evacuation: "Non", tempsEvac: 0, tauxEvac: 40, deplacement: 0, minimum: 80 },
+    debroussaillage: { surface: 0, terrain: "Plat et dégagé", vegetation: "Normale", zones: "1 zone simple", acces: "Facile", finition: "Sans finition", frequence: "2 passages / an", evacuation: "Non", tempsEvac: 0, tauxEvac: 40, deplacement: 0, minimum: 90 },
+    desherbage: { surface: 0, support: "Tout-venant / stabilisé", densite: "Normale", acces: "Facile", finition: "Avec soufflage", frequence: "Ponctuel", antiRepousse: "Sans anti-repousse", deplacement: 0, minimum: 75 },
+    haies: { lineaire: 0, hauteur: 2, configuration: "2 faces + dessus", densite: "Normale", largeur: "Standard", acces: "Facile", frequence: "Ponctuel", evacuation: "Non", tempsEvac: 0, tauxEvac: 40, deplacement: 0, minimum: 95 },
+  },
+};
+
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return deepClone(defaults);
+    const parsed = JSON.parse(raw);
+    return mergeDeep(deepClone(defaults), parsed);
+  }catch{
+    return deepClone(defaults);
+  }
+}
+function mergeDeep(target, source){
+  for(const key in source){
+    if(source[key] && typeof source[key] === "object" && !Array.isArray(source[key]) && target[key]){
+      mergeDeep(target[key], source[key]);
+    }else{
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+let state = loadState();
+let activeTab = "tonte";
+
+const euro = n => new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",minimumFractionDigits:2}).format(Number.isFinite(+n)?+n:0);
+const num = v => Number(v || 0);
+const round2 = v => Math.round((num(v) + Number.EPSILON) * 100) / 100;
+const fmt = (v,suffix="x") => `${num(v).toFixed(2).replace(".",",")}${suffix}`;
+
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function getSurfaceTier(value, tiers){ return tiers.reduce((acc,t)=> value >= t.min ? t : acc, tiers[0]); }
+function getHeightTier(value, tiers){ return tiers.reduce((acc,t)=> value >= t.minHeight ? t : acc, tiers[0]); }
+
+function setForm(section, patch){
+  state.forms[section] = { ...state.forms[section], ...patch };
+  save();
+  render();
+}
+function resetForm(section){
+  const base = deepClone(defaults.forms[section]);
+  if(section==="tonte"){
+    base.tauxEvac = state.tonteParams.constantes.tauxEvac;
+    base.deplacement = state.tonteParams.constantes.deplacement;
+    base.minimum = state.tonteParams.constantes.minimum;
+  }
+  if(section==="debroussaillage"){
+    base.tauxEvac = state.debroussaillageParams.constantes.tauxEvac;
+    base.deplacement = state.debroussaillageParams.constantes.deplacement;
+    base.minimum = state.debroussaillageParams.constantes.minimum;
+  }
+  if(section==="desherbage"){
+    base.deplacement = state.desherbageParams.constantes.deplacement;
+    base.minimum = state.desherbageParams.constantes.minimum;
+  }
+  if(section==="haies"){
+    base.tauxEvac = state.haieParams.constantes.tauxEvac;
+    base.deplacement = state.haieParams.constantes.deplacement;
+    base.minimum = state.haieParams.constantes.minimum;
+  }
+  state.forms[section] = base;
+  save();
+  render();
+}
+function updateNestedParams(section, category, label, value){
+  state[section][category][label] = num(value);
+  syncFormWithConstants(section);
+  save();
+  render();
+}
+function updateConstParams(section, label, value){
+  state[section].constantes[label] = num(value);
+  syncFormWithConstants(section);
+  save();
+  render();
+}
+function updateRateTable(key, index, field, value){
+  state[key][index][field] = (field === "label") ? value : num(value);
+  save();
+  render();
+}
+function syncFormWithConstants(section){
+  if(section === "tonteParams"){
+    state.forms.tonte.tauxEvac = state.tonteParams.constantes.tauxEvac;
+    state.forms.tonte.minimum = state.tonteParams.constantes.minimum;
+  }
+  if(section === "debroussaillageParams"){
+    state.forms.debroussaillage.tauxEvac = state.debroussaillageParams.constantes.tauxEvac;
+    state.forms.debroussaillage.minimum = state.debroussaillageParams.constantes.minimum;
+  }
+  if(section === "desherbageParams"){
+    state.forms.desherbage.minimum = state.desherbageParams.constantes.minimum;
+  }
+  if(section === "haieParams"){
+    state.forms.haies.tauxEvac = state.haieParams.constantes.tauxEvac;
+    state.forms.haies.minimum = state.haieParams.constantes.minimum;
+  }
+}
+
+function calcTonte(){
+  const f = state.forms.tonte;
+  const tier = getSurfaceTier(num(f.surface), state.tonteSurfaceRates);
+  const c = {
+    terrain: state.tonteParams.terrain[f.terrain] ?? 1,
+    herbe: state.tonteParams.herbe[f.herbe] ?? 1,
+    zones: state.tonteParams.zones[f.zones] ?? 1,
+    obstacles: state.tonteParams.obstacles[f.obstacles] ?? 1,
+    acces: state.tonteParams.acces[f.acces] ?? 1,
+    bordures: state.tonteParams.bordures[f.bordures] ?? 1,
+    frequence: state.tonteParams.frequence[f.frequence] ?? 1,
+    remise: state.tonteParams.remise[f.remise] ?? 1,
+  };
+  const coeffGlobal = round2(Object.values(c).reduce((a,b)=>a*b,1));
+  const baseSurface = round2(num(f.surface) * tier.rate);
+  const ajustee = round2(baseSurface * coeffGlobal);
+  const evac = f.evacuation === "Oui" ? round2(num(f.tempsEvac) * num(f.tauxEvac)) : 0;
+  const total = Math.max(round2(ajustee + evac + num(f.deplacement)), num(f.minimum));
+  return {tier,c,coeffGlobal,baseSurface,ajustee,evac,total};
+}
+function calcDeb(){
+  const f = state.forms.debroussaillage;
+  const tier = getSurfaceTier(num(f.surface), state.debroussaillageSurfaceRates);
+  const c = {
+    terrain: state.debroussaillageParams.terrain[f.terrain] ?? 1,
+    vegetation: state.debroussaillageParams.vegetation[f.vegetation] ?? 1,
+    zones: state.debroussaillageParams.zones[f.zones] ?? 1,
+    acces: state.debroussaillageParams.acces[f.acces] ?? 1,
+    finition: state.debroussaillageParams.finition[f.finition] ?? 1,
+    frequence: state.debroussaillageParams.frequence[f.frequence] ?? 1,
+  };
+  const coeffGlobal = round2(Object.values(c).reduce((a,b)=>a*b,1));
+  const baseSurface = round2(num(f.surface) * tier.rate);
+  const ajustee = round2(baseSurface * coeffGlobal);
+  const evac = f.evacuation === "Oui" ? round2(num(f.tempsEvac) * num(f.tauxEvac)) : 0;
+  const total = Math.max(round2(ajustee + evac + num(f.deplacement)), num(f.minimum));
+  return {tier,c,coeffGlobal,baseSurface,ajustee,evac,total};
+}
+function calcDesh(){
+  const f = state.forms.desherbage;
+  const tier = getSurfaceTier(num(f.surface), state.desherbageSurfaceRates);
+  const c = {
+    support: state.desherbageParams.support[f.support] ?? 1,
+    densite: state.desherbageParams.densite[f.densite] ?? 1,
+    acces: state.desherbageParams.acces[f.acces] ?? 1,
+    finition: state.desherbageParams.finition[f.finition] ?? 1,
+    frequence: state.desherbageParams.frequence[f.frequence] ?? 1,
+  };
+  const coeffGlobal = round2(Object.values(c).reduce((a,b)=>a*b,1));
+  const baseSurface = round2(num(f.surface) * tier.rate);
+  const ajustee = round2(baseSurface * coeffGlobal);
+  const antiRepousse = round2(num(f.surface) * (state.desherbageParams.options[f.antiRepousse] ?? 0));
+  const thermique = Math.max(ajustee, num(state.desherbageParams.constantes.forfaitThermiqueMini));
+  const total = Math.max(round2(thermique + antiRepousse + num(f.deplacement)), num(f.minimum));
+  return {tier,c,coeffGlobal,baseSurface,ajustee,antiRepousse,total};
+}
+function calcHaie(){
+  const f = state.forms.haies;
+  const tier = getHeightTier(num(f.hauteur), state.haieBaseRates);
+  const c = {
+    configuration: state.haieParams.configuration[f.configuration] ?? 1,
+    densite: state.haieParams.densite[f.densite] ?? 1,
+    largeur: state.haieParams.largeur[f.largeur] ?? 1,
+    acces: state.haieParams.acces[f.acces] ?? 1,
+    frequence: state.haieParams.frequence[f.frequence] ?? 1,
+  };
+  const coeffGlobal = round2(Object.values(c).reduce((a,b)=>a*b,1));
+  const baseLineaire = round2(num(f.lineaire) * tier.rate);
+  const ajustee = round2(baseLineaire * coeffGlobal);
+  const evac = f.evacuation === "Oui" ? round2(num(f.tempsEvac) * num(f.tauxEvac)) : 0;
+  const total = Math.max(round2(ajustee + evac + num(f.deplacement)), num(f.minimum));
+  return {tier,c,coeffGlobal,baseLineaire,ajustee,evac,total};
+}
+
+function field(label, control){
+  return `<div class="field"><label>${label}</label><div>${control}</div></div>`;
+}
+function inputNumber(value, onchange, step="1"){
+  return `<input type="number" step="${step}" value="${value}" onchange="${onchange}(this.value)">`;
+}
+function selectControl(value, options, onchange){
+  return `<select onchange="${onchange}(this.value)">
+    ${options.map(opt=>`<option value="${escapeAttr(opt)}" ${opt===value?"selected":""}>${opt}</option>`).join("")}
+  </select>`;
+}
+function resultRow(label, value, strong=false){
+  return `<div class="result-row ${strong?"strong":""}"><div class="l">${label}</div><div class="v">${value}</div></div>`;
+}
+function escapeAttr(s){
+  return String(s).replace(/"/g,"&quot;");
+}
+
+function renderTabs(){
+  const tabs = [
+    ["tonte","🌿","Tonte","Pelouses et finitions"],
+    ["debroussaillage","✂️","Débroussaillage","Talus et grandes zones"],
+    ["desherbage","🔥","Désherbage","Thermique et options"],
+    ["haies","🌳","Haies","Tailles et réductions"],
+    ["parametres","⚙️","Paramètres","Barèmes et coefficients"],
+  ];
+  document.getElementById("tabs").innerHTML = tabs.map(([key,icon,title,sub])=>`
+    <button class="tab-btn ${activeTab===key?"active":""}" onclick="switchTab('${key}')">
+      <div style="font-size:18px;font-weight:700">${icon} ${title}</div>
+      <small>${sub}</small>
+    </button>
+  `).join("");
+}
+function switchTab(tab){
+  activeTab = tab;
+  render();
+}
+
+function renderTonte(){
+  const f = state.forms.tonte;
+  const r = calcTonte();
+  document.getElementById("content-tonte").innerHTML = `
+    <div class="card calc">
+      <div class="head">
+        <div><h2>Calculateur tonte</h2></div>
+        <button class="btn" onclick="resetForm('tonte')">🔄 Reset</button>
+      </div>
+      <div class="body">
+        <div class="grid-2">
+          <div class="inner">
+            <div class="inner-head">Saisie chantier</div>
+            <div class="inner-body">
+              ${field("Surface à exploiter (m²)", inputNumber(f.surface, "setTonteSurface"))}
+              ${field("Terrain", selectControl(f.terrain, Object.keys(state.tonteParams.terrain), "setTonteTerrain"))}
+              ${field("Quantité d'herbe", selectControl(f.herbe, Object.keys(state.tonteParams.herbe), "setTonteHerbe"))}
+              ${field("Morcellement / zones", selectControl(f.zones, Object.keys(state.tonteParams.zones), "setTonteZones"))}
+              ${field("Obstacles / bordures", selectControl(f.obstacles, Object.keys(state.tonteParams.obstacles), "setTonteObstacles"))}
+              ${field("Accès / stationnement", selectControl(f.acces, Object.keys(state.tonteParams.acces), "setTonteAcces"))}
+              ${field("Bordures à la débroussailleuse", selectControl(f.bordures, Object.keys(state.tonteParams.bordures), "setTonteBordures"))}
+              ${field("Fréquence", selectControl(f.frequence, Object.keys(state.tonteParams.frequence), "setTonteFrequence"))}
+              ${field("Remise en état initiale", selectControl(f.remise, Object.keys(state.tonteParams.remise), "setTonteRemise"))}
+              ${field("Ramassage / évacuation ?", selectControl(f.evacuation, ["Non","Oui"], "setTonteEvacuation"))}
+              ${field("Temps évacuation / ramassage (h)", inputNumber(f.tempsEvac, "setTonteTempsEvac","0.25"))}
+              ${field("Taux évacuation (€/h)", inputNumber(f.tauxEvac, "setTonteTauxEvac"))}
+              ${field("Déplacement / forfait (€)", inputNumber(f.deplacement, "setTonteDeplacement"))}
+              ${field("Minimum facturable (€)", inputNumber(f.minimum, "setTonteMinimum"))}
+            </div>
+          </div>
+          <div class="inner">
+            <div class="inner-head">Calcul et résultat</div>
+            <div class="inner-body">
+              ${resultRow("Tarif base au m²", fmt(r.tier.rate,"€"))}
+              ${resultRow("Lecture", r.tier.label)}
+              ${resultRow("Coeff terrain", fmt(r.c.terrain))}
+              ${resultRow("Coeff herbe", fmt(r.c.herbe))}
+              ${resultRow("Coeff morcellement", fmt(r.c.zones))}
+              ${resultRow("Coeff obstacles", fmt(r.c.obstacles))}
+              ${resultRow("Coeff accès", fmt(r.c.acces))}
+              ${resultRow("Coeff bordures", fmt(r.c.bordures))}
+              ${resultRow("Coeff fréquence", fmt(r.c.frequence))}
+              ${resultRow("Coeff remise en état", fmt(r.c.remise))}
+              ${resultRow("Coeff global", fmt(r.coeffGlobal))}
+              <div class="sep"></div>
+              ${resultRow("Prix base surface", euro(r.baseSurface))}
+              ${resultRow("Prix tonte ajusté", euro(r.ajustee))}
+              ${resultRow("Évacuation / ramassage", euro(r.evac))}
+              ${resultRow("Déplacement", euro(f.deplacement))}
+              ${resultRow("Prix total HT", euro(r.total), true)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderDeb(){
+  const f = state.forms.debroussaillage;
+  const r = calcDeb();
+  document.getElementById("content-debroussaillage").innerHTML = `
+    <div class="card calc">
+      <div class="head">
+        <div><h2>Calculateur débroussaillage</h2></div>
+        <button class="btn" onclick="resetForm('debroussaillage')">🔄 Reset</button>
+      </div>
+      <div class="body">
+        <div class="grid-2">
+          <div class="inner">
+            <div class="inner-head">Saisie chantier</div>
+            <div class="inner-body">
+              ${field("Surface à débroussailler (m²)", inputNumber(f.surface, "setDebSurface"))}
+              ${field("Type de terrain", selectControl(f.terrain, Object.keys(state.debroussaillageParams.terrain), "setDebTerrain"))}
+              ${field("Végétation", selectControl(f.vegetation, Object.keys(state.debroussaillageParams.vegetation), "setDebVegetation"))}
+              ${field("Morcellement / zones", selectControl(f.zones, Object.keys(state.debroussaillageParams.zones), "setDebZones"))}
+              ${field("Accès / stationnement", selectControl(f.acces, Object.keys(state.debroussaillageParams.acces), "setDebAcces"))}
+              ${field("Finition", selectControl(f.finition, Object.keys(state.debroussaillageParams.finition), "setDebFinition"))}
+              ${field("Fréquence", selectControl(f.frequence, Object.keys(state.debroussaillageParams.frequence), "setDebFrequence"))}
+              ${field("Ramassage / évacuation ?", selectControl(f.evacuation, ["Non","Oui"], "setDebEvacuation"))}
+              ${field("Temps évacuation / ramassage (h)", inputNumber(f.tempsEvac, "setDebTempsEvac","0.25"))}
+              ${field("Taux évacuation (€/h)", inputNumber(f.tauxEvac, "setDebTauxEvac"))}
+              ${field("Déplacement / forfait (€)", inputNumber(f.deplacement, "setDebDeplacement"))}
+              ${field("Minimum facturable (€)", inputNumber(f.minimum, "setDebMinimum"))}
+            </div>
+          </div>
+          <div class="inner">
+            <div class="inner-head">Calcul et résultat</div>
+            <div class="inner-body">
+              ${resultRow("Tarif base au m²", fmt(r.tier.rate,"€"))}
+              ${resultRow("Lecture", r.tier.label)}
+              ${resultRow("Coeff terrain", fmt(r.c.terrain))}
+              ${resultRow("Coeff végétation", fmt(r.c.vegetation))}
+              ${resultRow("Coeff morcellement", fmt(r.c.zones))}
+              ${resultRow("Coeff accès", fmt(r.c.acces))}
+              ${resultRow("Coeff finition", fmt(r.c.finition))}
+              ${resultRow("Coeff fréquence", fmt(r.c.frequence))}
+              ${resultRow("Coeff global", fmt(r.coeffGlobal))}
+              <div class="sep"></div>
+              ${resultRow("Prix base surface", euro(r.baseSurface))}
+              ${resultRow("Prix débroussaillage ajusté", euro(r.ajustee))}
+              ${resultRow("Évacuation / ramassage", euro(r.evac))}
+              ${resultRow("Déplacement", euro(f.deplacement))}
+              ${resultRow("Prix total HT", euro(r.total), true)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderDesh(){
+  const f = state.forms.desherbage;
+  const r = calcDesh();
+  document.getElementById("content-desherbage").innerHTML = `
+    <div class="card calc">
+      <div class="head">
+        <div><h2>Calculateur désherbage thermique</h2></div>
+        <button class="btn" onclick="resetForm('desherbage')">🔄 Reset</button>
+      </div>
+      <div class="body">
+        <div class="grid-2">
+          <div class="inner">
+            <div class="inner-head">Saisie chantier</div>
+            <div class="inner-body">
+              ${field("Surface à traiter (m²)", inputNumber(f.surface, "setDeshSurface"))}
+              ${field("Support", selectControl(f.support, Object.keys(state.desherbageParams.support), "setDeshSupport"))}
+              ${field("Infestation", selectControl(f.densite, Object.keys(state.desherbageParams.densite), "setDeshDensite"))}
+              ${field("Accès / stationnement", selectControl(f.acces, Object.keys(state.desherbageParams.acces), "setDeshAcces"))}
+              ${field("Finition", selectControl(f.finition, Object.keys(state.desherbageParams.finition), "setDeshFinition"))}
+              ${field("Fréquence", selectControl(f.frequence, Object.keys(state.desherbageParams.frequence), "setDeshFrequence"))}
+              ${field("Option", selectControl(f.antiRepousse, Object.keys(state.desherbageParams.options), "setDeshAnti"))}
+              ${field("Déplacement / forfait (€)", inputNumber(f.deplacement, "setDeshDeplacement"))}
+              ${field("Minimum facturable (€)", inputNumber(f.minimum, "setDeshMinimum"))}
+            </div>
+          </div>
+          <div class="inner">
+            <div class="inner-head">Calcul et résultat</div>
+            <div class="inner-body">
+              ${resultRow("Tarif base au m²", fmt(r.tier.rate,"€"))}
+              ${resultRow("Lecture", r.tier.label)}
+              ${resultRow("Coeff support", fmt(r.c.support))}
+              ${resultRow("Coeff infestation", fmt(r.c.densite))}
+              ${resultRow("Coeff accès", fmt(r.c.acces))}
+              ${resultRow("Coeff finition", fmt(r.c.finition))}
+              ${resultRow("Coeff fréquence", fmt(r.c.frequence))}
+              ${resultRow("Coeff global", fmt(r.coeffGlobal))}
+              <div class="sep"></div>
+              ${resultRow("Prix base surface", euro(r.baseSurface))}
+              ${resultRow("Prix ajusté", euro(r.ajustee))}
+              ${resultRow("Option anti-repousse", euro(r.antiRepousse))}
+              ${resultRow("Déplacement", euro(f.deplacement))}
+              ${resultRow("Prix total HT", euro(r.total), true)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderHaie(){
+  const f = state.forms.haies;
+  const r = calcHaie();
+  document.getElementById("content-haies").innerHTML = `
+    <div class="card calc">
+      <div class="head">
+        <div><h2>Calculateur haies</h2></div>
+        <button class="btn" onclick="resetForm('haies')">🔄 Reset</button>
+      </div>
+      <div class="body">
+        <div class="grid-2">
+          <div class="inner">
+            <div class="inner-head">Saisie chantier</div>
+            <div class="inner-body">
+              ${field("Linéaire de haie (ml)", inputNumber(f.lineaire, "setHaieLineaire"))}
+              ${field("Hauteur moyenne (m)", inputNumber(f.hauteur, "setHaieHauteur","0.1"))}
+              ${field("Configuration", selectControl(f.configuration, Object.keys(state.haieParams.configuration), "setHaieConfiguration"))}
+              ${field("Densité / difficulté", selectControl(f.densite, Object.keys(state.haieParams.densite), "setHaieDensite"))}
+              ${field("Largeur / profondeur", selectControl(f.largeur, Object.keys(state.haieParams.largeur), "setHaieLargeur"))}
+              ${field("Accès / stationnement", selectControl(f.acces, Object.keys(state.haieParams.acces), "setHaieAcces"))}
+              ${field("Fréquence", selectControl(f.frequence, Object.keys(state.haieParams.frequence), "setHaieFrequence"))}
+              ${field("Évacuation", selectControl(f.evacuation, ["Non","Oui"], "setHaieEvacuation"))}
+              ${field("Temps évacuation (h)", inputNumber(f.tempsEvac, "setHaieTempsEvac","0.25"))}
+              ${field("Taux évacuation (€/h)", inputNumber(f.tauxEvac, "setHaieTauxEvac"))}
+              ${field("Déplacement / forfait (€)", inputNumber(f.deplacement, "setHaieDeplacement"))}
+              ${field("Minimum facturable (€)", inputNumber(f.minimum, "setHaieMinimum"))}
+            </div>
+          </div>
+          <div class="inner">
+            <div class="inner-head">Calcul et résultat</div>
+            <div class="inner-body">
+              ${resultRow("Tarif base / ml", fmt(r.tier.rate,"€"))}
+              ${resultRow("Lecture", r.tier.label)}
+              ${resultRow("Coeff configuration", fmt(r.c.configuration))}
+              ${resultRow("Coeff densité", fmt(r.c.densite))}
+              ${resultRow("Coeff largeur", fmt(r.c.largeur))}
+              ${resultRow("Coeff accès", fmt(r.c.acces))}
+              ${resultRow("Coeff fréquence", fmt(r.c.frequence))}
+              ${resultRow("Coeff global", fmt(r.coeffGlobal))}
+              <div class="sep"></div>
+              ${resultRow("Prix base linéaire", euro(r.baseLineaire))}
+              ${resultRow("Prix haie ajusté", euro(r.ajustee))}
+              ${resultRow("Évacuation", euro(r.evac))}
+              ${resultRow("Déplacement", euro(f.deplacement))}
+              ${resultRow("Prix total HT", euro(r.total), true)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function quickRatesCard(title, unit, rows){
+  return `
+    <div class="card">
+      <h3 style="margin-bottom:12px">${title}</h3>
+      ${rows.map(r=>`
+        <div class="quick-line">
+          <div>${r.min !== undefined ? `Dès ${r.min} m²` : `Dès ${r.minHeight} m`}</div>
+          <div style="font-weight:700">${num(r.rate).toFixed(2).replace(".",",")} €/${unit}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function coeffGroup(title, data, section, category){
+  return `
+    <div class="group-card">
+      <h4>${title}</h4>
+      ${Object.entries(data).map(([label,value])=>`
+        <div class="edit-line">
+          <div style="font-size:14px;color:#334155">${label}</div>
+          <input type="number" step="0.01" value="${value}" oninput="updateNestedParams('${section}','${category}','${escapeAttr(label)}', this.value)">
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function constGroup(title, data, section){
+  return `
+    <div class="group-card">
+      <h4>${title}</h4>
+      ${Object.entries(data).map(([label,value])=>`
+        <div class="edit-line">
+          <div style="font-size:14px;color:#334155">${label}</div>
+          <input type="number" step="0.01" value="${value}" oninput="updateConstParams('${section}','${label}', this.value)">
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function rateEditor(title, rows, sectionKey, fields){
+  const cols = fields.length===3 ? "" : " two";
+  return `
+    <div class="group-card" style="grid-column:1/-1">
+      <h4>${title}</h4>
+      ${rows.map((row,index)=>`
+        <div class="rate-row">
+          <div class="rate-grid${cols}">
+            ${fields.map(field=>`
+              <div>
+                <div class="small-label">${field.label}</div>
+                <input type="${field.type}" step="${field.step||"1"}" value="${row[field.key]}" oninput="updateRateTable('${sectionKey}',${index},'${field.key}',this.value)">
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function renderParams(){
+  document.getElementById("content-parametres").innerHTML = `
+    <div class="section-title">Paramètres</div>
+
+    ${paramSection(
+      "Tonte",
+      quickRatesCard("Barème rapide tonte","m²",state.tonteSurfaceRates),
+      `
+        ${coeffGroup("Terrain", state.tonteParams.terrain, "tonteParams", "terrain")}
+        ${coeffGroup("Herbe", state.tonteParams.herbe, "tonteParams", "herbe")}
+        ${coeffGroup("Zones", state.tonteParams.zones, "tonteParams", "zones")}
+        ${coeffGroup("Obstacles / bordures", state.tonteParams.obstacles, "tonteParams", "obstacles")}
+        ${coeffGroup("Accès", state.tonteParams.acces, "tonteParams", "acces")}
+        ${coeffGroup("Bordures à la débroussailleuse", state.tonteParams.bordures, "tonteParams", "bordures")}
+        ${coeffGroup("Fréquence", state.tonteParams.frequence, "tonteParams", "frequence")}
+        ${coeffGroup("Remise en état initiale", state.tonteParams.remise, "tonteParams", "remise")}
+        ${constGroup("Constantes", state.tonteParams.constantes, "tonteParams")}
+        ${rateEditor("Barème tonte", state.tonteSurfaceRates, "tonteSurfaceRates", [
+          {key:"min",label:"Surface mini",type:"number"},
+          {key:"rate",label:"Tarif €/m²",type:"number",step:"0.01"},
+          {key:"label",label:"Libellé",type:"text"}
+        ])}
+      `
+    )}
+
+    ${paramSection(
+      "Débroussaillage",
+      quickRatesCard("Barème rapide débroussaillage","m²",state.debroussaillageSurfaceRates),
+      `
+        ${coeffGroup("Terrain", state.debroussaillageParams.terrain, "debroussaillageParams", "terrain")}
+        ${coeffGroup("Végétation", state.debroussaillageParams.vegetation, "debroussaillageParams", "vegetation")}
+        ${coeffGroup("Zones", state.debroussaillageParams.zones, "debroussaillageParams", "zones")}
+        ${coeffGroup("Accès", state.debroussaillageParams.acces, "debroussaillageParams", "acces")}
+        ${coeffGroup("Finition", state.debroussaillageParams.finition, "debroussaillageParams", "finition")}
+        ${coeffGroup("Fréquence", state.debroussaillageParams.frequence, "debroussaillageParams", "frequence")}
+        ${coeffGroup("Évacuation", state.debroussaillageParams.evacuation, "debroussaillageParams", "evacuation")}
+        ${constGroup("Constantes", state.debroussaillageParams.constantes, "debroussaillageParams")}
+        ${rateEditor("Barème débroussaillage", state.debroussaillageSurfaceRates, "debroussaillageSurfaceRates", [
+          {key:"min",label:"Surface mini",type:"number"},
+          {key:"rate",label:"Tarif €/m²",type:"number",step:"0.01"},
+          {key:"label",label:"Libellé",type:"text"}
+        ])}
+      `
+    )}
+
+    ${paramSection(
+      "Désherbage thermique",
+      quickRatesCard("Barème rapide désherbage","m²",state.desherbageSurfaceRates),
+      `
+        ${coeffGroup("Support", state.desherbageParams.support, "desherbageParams", "support")}
+        ${coeffGroup("Infestation", state.desherbageParams.densite, "desherbageParams", "densite")}
+        ${coeffGroup("Accès", state.desherbageParams.acces, "desherbageParams", "acces")}
+        ${coeffGroup("Finition", state.desherbageParams.finition, "desherbageParams", "finition")}
+        ${coeffGroup("Fréquence", state.desherbageParams.frequence, "desherbageParams", "frequence")}
+        ${coeffGroup("Options", state.desherbageParams.options, "desherbageParams", "options")}
+        ${constGroup("Constantes", state.desherbageParams.constantes, "desherbageParams")}
+        ${rateEditor("Barème désherbage", state.desherbageSurfaceRates, "desherbageSurfaceRates", [
+          {key:"min",label:"Surface mini",type:"number"},
+          {key:"rate",label:"Tarif €/m²",type:"number",step:"0.01"},
+          {key:"label",label:"Libellé",type:"text"}
+        ])}
+      `
+    )}
+
+    ${paramSection(
+      "Haies",
+      quickRatesCard("Barème rapide haies","ml",state.haieBaseRates),
+      `
+        ${coeffGroup("Configuration", state.haieParams.configuration, "haieParams", "configuration")}
+        ${coeffGroup("Densité / difficulté", state.haieParams.densite, "haieParams", "densite")}
+        ${coeffGroup("Largeur / profondeur", state.haieParams.largeur, "haieParams", "largeur")}
+        ${coeffGroup("Accès", state.haieParams.acces, "haieParams", "acces")}
+        ${coeffGroup("Fréquence", state.haieParams.frequence, "haieParams", "frequence")}
+        ${coeffGroup("Évacuation", state.haieParams.evacuation, "haieParams", "evacuation")}
+        ${constGroup("Constantes", state.haieParams.constantes, "haieParams")}
+        ${rateEditor("Barème haies", state.haieBaseRates, "haieBaseRates", [
+          {key:"minHeight",label:"Hauteur mini",type:"number",step:"0.1"},
+          {key:"rate",label:"Tarif €/ml",type:"number",step:"0.01"},
+          {key:"label",label:"Libellé",type:"text"}
+        ])}
+      `
+    )}
+  `;
+}
+function paramSection(title,left,right){
+  return `
+    <section style="margin-bottom:26px">
+      <div class="section-title">${title}</div>
+      <div class="param-grid">
+        <div class="param-col">${left}</div>
+        <div class="param-right">
+          <div class="card big">
+            <div class="param-groups">${right}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function render(){
+  renderTabs();
+  document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"));
+  document.getElementById("content-"+activeTab).classList.add("active");
+  renderTonte();
+  renderDeb();
+  renderDesh();
+  renderHaie();
+  renderParams();
+}
+
+/* setters */
+function setTonteSurface(v){setForm("tonte",{surface:num(v)})}
+function setTonteTerrain(v){setForm("tonte",{terrain:v})}
+function setTonteHerbe(v){setForm("tonte",{herbe:v})}
+function setTonteZones(v){setForm("tonte",{zones:v})}
+function setTonteObstacles(v){setForm("tonte",{obstacles:v})}
+function setTonteAcces(v){setForm("tonte",{acces:v})}
+function setTonteBordures(v){setForm("tonte",{bordures:v})}
+function setTonteFrequence(v){setForm("tonte",{frequence:v})}
+function setTonteRemise(v){setForm("tonte",{remise:v})}
+function setTonteEvacuation(v){setForm("tonte",{evacuation:v})}
+function setTonteTempsEvac(v){setForm("tonte",{tempsEvac:num(v)})}
+function setTonteTauxEvac(v){setForm("tonte",{tauxEvac:num(v)})}
+function setTonteDeplacement(v){setForm("tonte",{deplacement:num(v)})}
+function setTonteMinimum(v){setForm("tonte",{minimum:num(v)})}
+
+function setDebSurface(v){setForm("debroussaillage",{surface:num(v)})}
+function setDebTerrain(v){setForm("debroussaillage",{terrain:v})}
+function setDebVegetation(v){setForm("debroussaillage",{vegetation:v})}
+function setDebZones(v){setForm("debroussaillage",{zones:v})}
+function setDebAcces(v){setForm("debroussaillage",{acces:v})}
+function setDebFinition(v){setForm("debroussaillage",{finition:v})}
+function setDebFrequence(v){setForm("debroussaillage",{frequence:v})}
+function setDebEvacuation(v){setForm("debroussaillage",{evacuation:v})}
+function setDebTempsEvac(v){setForm("debroussaillage",{tempsEvac:num(v)})}
+function setDebTauxEvac(v){setForm("debroussaillage",{tauxEvac:num(v)})}
+function setDebDeplacement(v){setForm("debroussaillage",{deplacement:num(v)})}
+function setDebMinimum(v){setForm("debroussaillage",{minimum:num(v)})}
+
+function setDeshSurface(v){setForm("desherbage",{surface:num(v)})}
+function setDeshSupport(v){setForm("desherbage",{support:v})}
+function setDeshDensite(v){setForm("desherbage",{densite:v})}
+function setDeshAcces(v){setForm("desherbage",{acces:v})}
+function setDeshFinition(v){setForm("desherbage",{finition:v})}
+function setDeshFrequence(v){setForm("desherbage",{frequence:v})}
+function setDeshAnti(v){setForm("desherbage",{antiRepousse:v})}
+function setDeshDeplacement(v){setForm("desherbage",{deplacement:num(v)})}
+function setDeshMinimum(v){setForm("desherbage",{minimum:num(v)})}
+
+function setHaieLineaire(v){setForm("haies",{lineaire:num(v)})}
+function setHaieHauteur(v){setForm("haies",{hauteur:num(v)})}
+function setHaieConfiguration(v){setForm("haies",{configuration:v})}
+function setHaieDensite(v){setForm("haies",{densite:v})}
+function setHaieLargeur(v){setForm("haies",{largeur:v})}
+function setHaieAcces(v){setForm("haies",{acces:v})}
+function setHaieFrequence(v){setForm("haies",{frequence:v})}
+function setHaieEvacuation(v){setForm("haies",{evacuation:v})}
+function setHaieTempsEvac(v){setForm("haies",{tempsEvac:num(v)})}
+function setHaieTauxEvac(v){setForm("haies",{tauxEvac:num(v)})}
+function setHaieDeplacement(v){setForm("haies",{deplacement:num(v)})}
+function setHaieMinimum(v){setForm("haies",{minimum:num(v)})}
+
+render();
+</script>
+</body>
+</html>
