@@ -14,95 +14,88 @@ export default function LoginPage() {
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
+    if (!email || !password) {
+      setMessage("Renseigne ton e-mail et ton mot de passe.");
       return;
     }
 
-    await supabase.auth.getSession();
+    try {
+      setLoading(true);
+      setMessage("");
 
-    router.replace("/");
-    router.refresh();
+      const supabase = createClient();
 
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 300);
-  }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-  async function signUp() {
-    setLoading(true);
-    setMessage("");
+      if (error) {
+        setMessage("Connexion impossible : " + error.message);
+        setLoading(false);
+        return;
+      }
 
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage("Compte créé. Vérifie ton e-mail si la confirmation est activée.");
+      router.replace("/");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      setMessage("Une erreur est survenue pendant la connexion.");
+      setLoading(false);
+      return;
     }
 
     setLoading(false);
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-white">
-      <div className="mx-auto mt-16 max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
-        <h1 className="text-3xl font-bold">Delale Bureau</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Connexion sécurisée pour retrouver ton planning et ton calculateur partout.
-        </p>
+    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+      <div className="mx-auto mt-10 max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Delale Bureau</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Connecte-toi pour accéder à ton planning et à ton calculateur.
+          </p>
+        </div>
 
-        <form onSubmit={signIn} className="mt-6 grid gap-4">
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-2xl border border-white/10 bg-slate-800 px-4 py-3"
-          />
+        <form onSubmit={signIn} className="grid gap-4">
+          <div className="grid gap-2">
+            <label className="text-sm text-slate-300">E-mail</label>
+            <input
+              type="email"
+              placeholder="ton@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-2xl border border-white/10 bg-slate-800 px-4 py-3 outline-none transition focus:border-emerald-500"
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-2xl border border-white/10 bg-slate-800 px-4 py-3"
-          />
+          <div className="grid gap-2">
+            <label className="text-sm text-slate-300">Mot de passe</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-2xl border border-white/10 bg-slate-800 px-4 py-3 outline-none transition focus:border-emerald-500"
+            />
+          </div>
 
           <button
+            type="submit"
             disabled={loading}
-            className="rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-white hover:bg-emerald-400 disabled:opacity-60"
+            className="mt-2 rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Chargement..." : "Se connecter"}
-          </button>
-
-          <button
-            type="button"
-            onClick={signUp}
-            disabled={loading}
-            className="rounded-2xl border border-white/10 bg-slate-800 px-4 py-3 font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
-          >
-            Créer mon compte
+            {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
         </form>
 
-        {message ? <p className="mt-4 text-sm text-amber-300">{message}</p> : null}
+        {message ? (
+          <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            {message}
+          </div>
+        ) : null}
       </div>
     </main>
   );
