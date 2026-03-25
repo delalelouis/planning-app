@@ -9,21 +9,42 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const supabase = createClient();
+    const supabase = createClient();
 
+    let mounted = true;
+
+    async function checkSession() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        router.replace("/login");
-      } else {
-        setLoading(false);
-      }
-    };
+      if (!mounted) return;
 
-    checkUser();
+      if (session) {
+        setLoading(false);
+      } else {
+        router.replace("/login");
+      }
+    }
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+
+      if (session) {
+        setLoading(false);
+      } else {
+        router.replace("/login");
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   if (loading) {
